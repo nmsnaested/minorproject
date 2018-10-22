@@ -89,7 +89,7 @@ def plot_figures(filename, name, mode, mean=False):
 def plot_gaussian(logfile, scales, figtype="pdf"):
     log = open(logfile, "rb")
     params = pickle.load(log)
-    nb_models = pickle.load(log)
+    models = pickle.load(log)
 
     glist = []
     while 1:
@@ -98,34 +98,13 @@ def plot_gaussian(logfile, scales, figtype="pdf"):
         except (EOFError):
             break
     
-    avg_test_losses = glist[-4]
-    avg_test_accs = glist[-3]
-    std_test_losses = glist[-2]
-    std_test_accs = glist[-1]
+    all_test_accs = glist[-1]
 
     log.close()
 
     plt.figure()
-    for m in range(nb_models): 
-        plt.errorbar(scales, avg_test_losses[m], yerr=std_test_losses[m], label="model {}".format(m))
-    plt.title("Mean Loss vs Test scale")
-    plt.xlabel("Test scale")
-    plt.ylabel("Categorical cross entropy")
-    plt.legend()
-    plt.savefig("avg_test_loss_gaussian_cifar.{}".format(figtype))
-
-    plt.figure()
-    for m in range(nb_models): 
-        plt.errorbar(scales, avg_test_accs[m], yerr=std_test_accs[m], label="model {}".format(m))
-    plt.title("Mean Accuracy vs Test scale")
-    plt.xlabel("Test scale")
-    plt.ylabel("Accuracy %")
-    plt.legend()
-    plt.savefig("avg_test_acc_gaussian_cifar.{}".format(figtype))
-
-    plt.figure()
-    for m in range(nb_models): 
-        plt.errorbar(scales, [100-x for x in avg_test_accs[m]], yerr=std_test_accs[m], label="model {}".format(m))
+    for _, name in enumerate(models): 
+        plt.errorbar(scales, [100-x for x in all_test_accs[name]["avg"]], yerr=all_test_accs[name]["std"], label=name)
     plt.title("Mean Error vs Test scale")
     plt.xlabel("Test scale")
     plt.ylabel("Error %")
