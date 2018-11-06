@@ -31,7 +31,7 @@ class StdNet(nn.Module):
         self.conv6 = nn.Conv2d(192, 192, self.size)
         self.pool = nn.MaxPool2d(2, 2)
 
-        self.fc = nn.Linear(192 * 4**2, self.nb_classes)
+        self.fc = nn.Linear(192 * 20**2, self.nb_classes)
 
     def forward(self, x):
         x = F.relu(self.conv1(x))
@@ -41,7 +41,7 @@ class StdNet(nn.Module):
         x = F.relu(self.conv5(x))
         x = F.relu(self.conv6(x))
         x = self.pool(x)
-        x = x.view(-1, 192 * 4**2)
+        x = x.view(-1, 192 * 20**2)
         x = self.fc(x)
         return x
 
@@ -77,8 +77,8 @@ class kanazawa(nn.Module):
         x = x.unsqueeze(1)  # [batch, sigma, feature, y, x]
         x = x.repeat(1, self.nratio, 1, 1, 1)  # [batch, sigma, feature, y, x]
         x = F.relu(self.conv1(x))
-        x = self.pool1(x)
-
+        x = self.pool1(x)# [batch,feature]
+        
         x = x.unsqueeze(1)  # [batch, sigma, feature, y, x]
         x = x.repeat(1, self.nratio, 1, 1, 1)  # [batch, sigma, feature, y, x]
         x = F.relu(self.conv2(x))
