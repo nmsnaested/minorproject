@@ -86,7 +86,7 @@ def plot_figures(filename, name, mode, mean=False):
     pickle_log.close()
 
 
-def plot_gaussian(logfile, scales, figtype="pdf"):
+def plot_gaussian(logfile, scales, name, figtype="pdf", dataset="cifar"):
     log = open(logfile, "rb")
     params = pickle.load(log)
     models = pickle.load(log)
@@ -109,4 +109,43 @@ def plot_gaussian(logfile, scales, figtype="pdf"):
     plt.xlabel("Test scale")
     plt.ylabel("Error %")
     plt.legend()
-    plt.savefig("avg_test_err_gaussian_cifar.{}".format(figtype))
+    plt.savefig("avg_test_err_gaussian_{}_{}.{}".format(dataset, name, figtype))
+
+def plot_train_log(logfile, models_dict, nb_epochs, figtype="pdf", dataset="cifar"):
+    #models = []
+    train_losses = []
+    train_accs = []
+    for m in range(len(models_dict)):
+        log = open("trained_model_{}_{}.pickle".format(m, logfile) , "rb")
+        tmplist = []
+        while 1:
+            try:
+                tmplist.append(pickle.load(log))
+            except (EOFError):
+                break
+        #name = tmplist[0]
+        #models.append(name)
+        train_dict = tmplist[-1]  #{"train_loss": train_loss, "train_acc": train_acc}
+        train_losses.append(train_dict["train_loss"])
+        train_accs.append(train_dict["train_acc"])
+
+    plt.figure()
+    for i, name in enumerate(models_dict): 
+        plt.plot(range(nb_epochs), train_losses[i], label=name)
+    plt.title("Train loss")
+    plt.xlabel("Epoch")
+    plt.ylabel("Cross entropy")
+    plt.legend()
+    plt.savefig("train_loss_{}_{}.{}".format(dataset, logfile, figtype))
+
+    plt.figure()
+    for i, name in enumerate(models_dict): 
+        plt.plot(range(nb_epochs), train_accs[i], label=name)
+    plt.title("Train accuracy")
+    plt.xlabel("Epoch")
+    plt.ylabel("Accuracy")
+    plt.legend()
+    plt.savefig("train_acc_{}_{}.{}".format(dataset, logfile, figtype))
+
+    
+    

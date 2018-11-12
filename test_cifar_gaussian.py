@@ -26,7 +26,7 @@ from arch_bis import StdNet, kanazawa, SiCNN
 #from small_arch import StdNet, kanazawa, SiCNN
 from train import train
 from test import test 
-from functions import filter_size, plot_gaussian 
+from functions import filter_size, plot_gaussian, plot_train_log 
 from rescale import RandomRescale
 import pickle
 
@@ -43,6 +43,7 @@ f_in = 3
 size = 5
 
 log = open("cifar_gaussian_log_bis.pickle", "wb")
+#log = open("cifar_gaussian_log_small.pickle", "wb")
 
 parameters = {
     "epochs": nb_epochs,
@@ -79,7 +80,7 @@ models = {
     "SiCNN wide, k=5, r=2^(2/3), n=3, D=0": SiCNN(f_in = 3, size = 5, ratio = 2**(2/3), nratio = 3, srange = 0, factor=2.2),
     #"SiCNN k=13, r=2^(-1/3), n=6, D=4":SiCNN(f_in = 3, size = filter_size(5, 2**(1/3), 6), ratio = 2**(-1/3), nratio = 6, srange = 4),
     #"SiCNN k=13, r=2^(-2/3), n=3, D=2": SiCNN(f_in = 3, size =filter_size(5, 2**(2/3), 3), ratio = 2**(-2/3), nratio = 3, srange = 2),
-    "Kanazawa model, r=2^(1/3), n=6, D=0": kanazawa(f_in = 3, ratio = 2**(1/3), nratio = 6, srange = 0)
+    #"Kanazawa model, r=2^(1/3), n=6, D=0": kanazawa(f_in = 3, ratio = 2**(1/3), nratio = 6, srange = 0)
 }
 
 pickle.dump(models, log)
@@ -88,6 +89,9 @@ for m, name in enumerate(models):
     print(" model {}: {}".format(m, name))
     if os.path.isfile("trained_model_{}_bis.pickle".format(m)): 
         model = pickle.load(open("trained_model_{}_bis.pickle".format(m), "rb"))
+    #if os.path.isfile("trained_model_{}_small.pickle".format(m)): 
+    #    model = pickle.load(open("trained_model_{}_small.pickle".format(m), "rb"))
+        
         model.to(device)
         epoch=200
     else:
@@ -101,6 +105,8 @@ for m, name in enumerate(models):
             train_loss.append(train_l)
             train_acc.append(train_a)
         model_log = open("trained_model_{}_bis.pickle".format(m), "wb")
+        #model_log = open("trained_model_{}_small.pickle".format(m), "wb")
+        pickle.dump(name, model_log)
         pickle.dump(model, model_log)
         pickle.dump({"train_loss": train_loss, "train_acc": train_acc}, model_log)
         model_log.close()
@@ -132,4 +138,7 @@ pickle.dump(test_accs_dict, log)
 
 log.close()
 
-plot_gaussian("cifar_gaussian_log_bis.pickle", scales, "pdf")
+plot_gaussian("cifar_gaussian_log_bis.pickle", scales, "bis", "pdf")
+#plot_gaussian("cifar_gaussian_log_small.pickle", scales, "small", "pdf")
+
+plot_train_log("bis", models, nb_epochs, "pdf")

@@ -105,9 +105,7 @@ class SiCNN(nn.Module):
         x = x.repeat(1, self.nratio, 1, 1, 1)  # [batch, sigma, feature, y, x]
         
         x = F.relu(self.conv1(x))
-        x = self.pool(x) # [batch,feature]
         x = F.relu(self.conv2(x))
-        x = self.pool(x) # [batch,feature]
         x = F.relu(self.conv3(x))
         x = self.pool(x) # [batch,feature]
         x = F.relu(self.fc1(x))
