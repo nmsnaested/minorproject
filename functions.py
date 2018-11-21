@@ -86,21 +86,22 @@ def plot_figures(filename, name, mode, mean=False):
     pickle_log.close()
 
 
-def plot_gaussian(logfile, scales, name, figtype="pdf", dataset="cifar"):
+def plot_gaussian(logfile, scales, logtype, figtype="pdf", dataset="cifar"):
     log = open(logfile, "rb")
-    params = pickle.load(log)
-    models = pickle.load(log)
-
+    
     glist = []
     while 1:
         try:
             glist.append(pickle.load(log))
         except (EOFError):
             break
-    
+    models = glist[1] #2nd element , 1st el = parameters
     all_test_accs = glist[-1]
 
     log.close()
+
+    for _, name in enumerate(models): 
+        print(all_test_accs[name]["std"])
 
     plt.figure()
     for _, name in enumerate(models): 
@@ -109,7 +110,7 @@ def plot_gaussian(logfile, scales, name, figtype="pdf", dataset="cifar"):
     plt.xlabel("Test scale")
     plt.ylabel("Error %")
     plt.legend()
-    plt.savefig("avg_test_err_gaussian_{}_{}.{}".format(dataset, name, figtype))
+    plt.savefig("avg_test_err_gaussian_{}_{}.{}".format(dataset, logtype, figtype))
 
 def plot_train_log(logfile, models_dict, nb_epochs, figtype="pdf", dataset="cifar"):
     #models = []
@@ -147,5 +148,58 @@ def plot_train_log(logfile, models_dict, nb_epochs, figtype="pdf", dataset="cifa
     plt.legend()
     plt.savefig("train_acc_{}_{}.{}".format(dataset, logfile, figtype))
 
+def plot_train_val(logfile, models_dict, nb_epochs, figtype="pdf", dataset="cifar"):
+    train_losses = []
+    train_accs = []
+    val_losses = []
+    val_accs = []
+
+    for m in range(len(models_dict)):
+        log = open("trained_model_{}_{}.pickle".format(m, logfile) , "rb")
+        tmplist = []
+        while 1:
+            try:
+                tmplist.append(pickle.load(log))
+            except (EOFError):
+                break
+        train_dict = tmplist[-1]  #{"train_loss": train_loss, "train_acc": train_acc}
+        train_losses.append(train_dict["train_loss"])
+        train_accs.append(train_dict["train_acc"])
+        val_losses.append(train_dict["val_loss"])
+        val_accs.append(train_dict["val_acc"])   
     
-    
+    plt.figure()
+    for m, name in enumerate(models_dict): 
+        plt.plot(range(nb_epochs), train_losses[m], label=name)
+    plt.title("Train loss")
+    plt.xlabel("Epoch")
+    plt.ylabel("Cross entropy")
+    plt.legend()
+    plt.savefig("train_loss_{}_{}.{}".format(dataset, logfile, figtype))
+
+    plt.figure()
+    for m, name in enumerate(models_dict): 
+        plt.plot(range(nb_epochs), train_accs[m], label=name)
+    plt.title("Train accuracy")
+    plt.xlabel("Epoch")
+    plt.ylabel("Accuracy")
+    plt.legend()
+    plt.savefig("train_acc_{}_{}.{}".format(dataset, logfile, figtype))
+
+    plt.figure()
+    for m, name in enumerate(models_dict): 
+        plt.plot(range(nb_epochs), val_losses[m], label=name)
+    plt.title("Validation loss")
+    plt.xlabel("Epoch")
+    plt.ylabel("Cross entropy")
+    plt.legend()
+    plt.savefig("val_loss_{}_{}.{}".format(dataset, logfile, figtype))
+
+    plt.figure()
+    for m, name in enumerate(models_dict): 
+        plt.plot(range(nb_epochs), train_accs[m], label=name)
+    plt.title("Validation accuracy")
+    plt.xlabel("Epoch")
+    plt.ylabel("Accuracy")
+    plt.legend()
+    plt.savefig("val_acc_{}_{}.{}".format(dataset, logfile, figtype))

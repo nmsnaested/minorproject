@@ -5,7 +5,6 @@ import numpy as np
 import matplotlib
 matplotlib.use('agg')
 import matplotlib.pyplot as plt
-import pickle
 
 import torch
 import torchvision
@@ -22,12 +21,12 @@ import torch.optim as optim
 from scale_cnn.convolution import ScaleConvolution
 from scale_cnn.pooling import ScalePool
 
-#from architectures import StdNet, kanazawa, SiCNN
-from arch_bis import StdNet, kanazawa, SiCNN
+from small_arch import StdNet, kanazawa, SiCNN
 from train import train
 from test import test 
 from functions import filter_size, plot_gaussian, plot_train_log 
 from rescale import RandomRescale
+import pickle
 
 device =  torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 print(device)
@@ -41,8 +40,7 @@ repeats = 5
 f_in = 3
 size = 5
 
-#log = open("cifar_gaussian_log.pickle", "wb")
-log = open("cifar_gaussian_log_bis.pickle", "wb")
+log = open("cifar_gaussian_log_small.pickle", "wb")
 
 parameters = {
     "epochs": nb_epochs,
@@ -86,10 +84,15 @@ pickle.dump(models, log)
 
 for m, name in enumerate(models):
     print(" model {}: {}".format(m, name))
-    if os.path.isfile("trained_model_{}_bis.pickle".format(m)): 
-        model = pickle.load(open("trained_model_{}_bis.pickle".format(m), "rb"))    
+    if os.path.isfile("trained_model_{}_small.pickle".format(m)): 
+        model_log = open("trained_model_{}_small.pickle".format(m), "rb")
+        model_name = pickle.load(model_log)
+        model = pickle.load(model_log)
+        
         model.to(device)
         epoch=nb_epochs
+
+        model_log.close()
     else:
         model = models[name]
         model.to(device)
@@ -100,8 +103,8 @@ for m, name in enumerate(models):
             train_l, train_a = test(model, train_loader, criterion, epoch, batch_log, device) 
             train_loss.append(train_l)
             train_acc.append(train_a)
-        model_log = open("trained_model_{}_bis.pickle".format(m), "wb")
-        #pickle.dump(name, model_log)
+        model_log = open("trained_model_{}_small.pickle".format(m), "wb")
+        pickle.dump(name, model_log)
         pickle.dump(model, model_log)
         pickle.dump({"train_loss": train_loss, "train_acc": train_acc}, model_log)
         model_log.close()
@@ -124,12 +127,15 @@ for m, name in enumerate(models):
     avg_test_acc = np.mean(np.array(m_test_acc), axis=0)    
     std_test_acc = np.std(np.array(m_test_acc), axis=0)    
 
+    pickle.dump(avg_test_acc, log)
+    pickle.dump(std_test_acc, log)
+
     test_accs_dict[name] = {"avg": avg_test_acc, "std": std_test_acc}
 
 pickle.dump(test_accs_dict, log)
 
 log.close()
 
-plot_gaussian("cifar_gaussian_log_bis.pickle", scales, "bis", "pdf")
+plot_gaussian("cifar_gaussian_log_small.pickle", scales, "small", "pdf")
 
-plot_train_log("bis", models, nb_epochs, "pdf")
+plot_train_log("small", models, nb_epochs, "pdf")
