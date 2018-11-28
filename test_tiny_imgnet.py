@@ -22,7 +22,8 @@ from scale_cnn.pooling import ScalePool
 
 from loaddataset import ImgNetDataset
 
-from architectures import StdNet, kanazawa, SiCNN
+from arch_bis import StdNet, kanazawa, SiCNN
+#from architectures import StdNet, kanazawa, SiCNN
 from train import train
 from test import test 
 from functions import filter_size, plot_train_val
@@ -35,15 +36,16 @@ print(device)
 
 nb_epochs=200
 learning_rate = 0.001
-batch_size = 128
-batch_log = 70
+batch_size = 256
+batch_log = 100
 
+#log = open("tiny_imagenet_log_bis.pickle", "wb")
 log = open("tiny_imagenet_log.pickle", "wb")
 
 transforms = torchvision.transforms.Compose(
     [torchvision.transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
 
-root = "./tiny-imagenet-200"
+root = "./tiny-imagenet"
 train_set = ImgNetDataset(rootdir=root, mode="train", transforms=transforms)
 valid_set = ImgNetDataset(rootdir=root, mode="val", transforms=transforms)
 
@@ -53,15 +55,15 @@ valid_loader = DataLoader(valid_set, batch_size = batch_size, shuffle = True, nu
 criterion = nn.CrossEntropyLoss()
 
 models = {
-    "standard ConvNet": StdNet(),
-    "SiCNN k=5, r=2^(1/3), n=6, D=0": SiCNN(f_in = 3, size = 5, ratio = 2**(1/3), nratio = 6, srange = 0),
-    "SiCNN k=5, r=2^(1/3), n=6, D=4": SiCNN(f_in = 3, size = 5, ratio = 2**(1/3), nratio = 6, srange = 4),
-    "SiCNN wide, k=5, r=2^(1/3), n=6, D=0": SiCNN(f_in = 3, size = 5, ratio = 2**(1/3), nratio = 6, srange = 0, factor = 2.94),
-    "SiCNN k=5, r=2^(2/3), n=3, D=0": SiCNN(f_in = 3, size = 5, ratio = 2**(2/3), nratio = 3, srange = 0),
-    "SiCNN k=5, r=2^(2/3), n=3, D=2": SiCNN(f_in = 3, size = 5, ratio = 2**(2/3), nratio = 3, srange = 2),
-    "SiCNN wide, k=5, r=2^(2/3), n=3, D=0": SiCNN(f_in = 3, size = 5, ratio = 2**(2/3), nratio = 3, srange = 0, factor=2.2),
-    "SiCNN k=13, r=2^(-1/3), n=6, D=4":SiCNN(f_in = 3, size = filter_size(5, 2**(1/3), 6), ratio = 2**(-1/3), nratio = 6, srange = 4),
-    "SiCNN k=13, r=2^(-2/3), n=3, D=2": SiCNN(f_in = 3, size =filter_size(5, 2**(2/3), 3), ratio = 2**(-2/3), nratio = 3, srange = 2),
+    "standard ConvNet": StdNet(3, 5, 200),
+    "SiCNN k=5, r=2^(1/3), n=6, D=0": SiCNN(f_in = 3, size = 5, ratio = 2**(1/3), nratio = 6, srange = 0, nb_classes=200),
+    "SiCNN k=5, r=2^(1/3), n=6, D=4": SiCNN(f_in = 3, size = 5, ratio = 2**(1/3), nratio = 6, srange = 4, nb_classes=200),
+    "SiCNN wide, k=5, r=2^(1/3), n=6, D=0": SiCNN(f_in = 3, size = 5, ratio = 2**(1/3), nratio = 6, srange = 0, nb_classes=200, factor = 2.94),
+    "SiCNN k=5, r=2^(2/3), n=3, D=0": SiCNN(f_in = 3, size = 5, ratio = 2**(2/3), nratio = 3, srange = 0, nb_classes=200),
+    "SiCNN k=5, r=2^(2/3), n=3, D=2": SiCNN(f_in = 3, size = 5, ratio = 2**(2/3), nratio = 3, srange = 2, nb_classes=200),
+    "SiCNN wide, k=5, r=2^(2/3), n=3, D=0": SiCNN(f_in = 3, size = 5, ratio = 2**(2/3), nratio = 3, srange = 0, nb_classes=200, factor=2.2),
+    "SiCNN k=13, r=2^(-1/3), n=6, D=4":SiCNN(f_in = 3, size = filter_size(5, 2**(1/3), 6), ratio = 2**(-1/3), nratio = 6, srange = 4, nb_classes=200),
+    "SiCNN k=13, r=2^(-2/3), n=3, D=2": SiCNN(f_in = 3, size =filter_size(5, 2**(2/3), 3), ratio = 2**(-2/3), nratio = 3, srange = 2, nb_classes=200),
     #"Kanazawa model, r=2^(1/3), n=6, D=0": kanazawa(f_in = 3, ratio = 2**(1/3), nratio = 6, srange = 0)
 }
 
@@ -69,8 +71,8 @@ pickle.dump(models, log)
 
 for m, name in enumerate(models): 
     print("model {}: {}".format(m, name))
-    if os.path.isfile("trained_model_{}_tiny_{}.pickle".format(m, nb_epochs)): 
-        model = pickle.load(open("trained_model_{}_tiny_{}.pickle".format(m, nb_epochs), "rb"))    
+    if os.path.isfile("trained_model_{}_{}_tiny.pickle".format(m, nb_epochs)): 
+        model = pickle.load(open("trained_model_{}_{}_tiny.pickle".format(m, nb_epochs), "rb"))    
         model.to(device)
         epoch=nb_epochs
     else:
@@ -88,7 +90,7 @@ for m, name in enumerate(models):
             val_l, val_a = test(model, valid_loader, criterion, epoch, batch_log, device)
             val_loss.append(val_l)
             val_acc.append(val_a)
-        model_log = open("trained_model_{}_tiny_{}.pickle".format(m, nb_epochs), "wb")
+        model_log = open("trained_model_{}_{}_tiny.pickle".format(m, nb_epochs), "wb")
         pickle.dump(name, model_log)
         pickle.dump(model, model_log)
         pickle.dump({

@@ -28,12 +28,13 @@ from train import train
 from test import test 
 from functions import filter_size, plot_gaussian, plot_train_log 
 from rescale import RandomRescale
+from loaddataset import ImgNetDataset
 
 device =  torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 print(device)
 
 nb_epochs=200
-learning_rate = 0.0001
+learning_rate = 0.001
 batch_size = 128
 batch_log = 70
 repeats = 5
@@ -41,8 +42,7 @@ repeats = 5
 f_in = 3
 size = 5
 
-#log = open("cifar_gaussian_log.pickle", "wb")
-log = open("cifar_gaussian_log_bis.pickle", "wb")
+log = open("tiny_gaussian_log.pickle", "wb")
 
 parameters = {
     "epochs": nb_epochs,
@@ -52,16 +52,20 @@ parameters = {
 }
 pickle.dump(parameters, log)
 
-root = './cifardata' 
+root = './tiny-imagenet-200' 
 if not os.path.exists(root):
     os.mkdir(root)
 
 train_transf = transforms.Compose([
-                transforms.Resize(64), #RandomRescale(size = 40, scales = (1.0, 0.24), sampling = "normal"),  #apply scaling following a gaussian distribution, mean 1, std 0.24
                 transforms.ToTensor(), transforms.Normalize((0.1307,),(0.3081,))])
 
-train_set = datasets.CIFAR10(root=root, train=True, transform=train_transf, download=True)
-train_loader = DataLoader(dataset=train_set, batch_size=batch_size, shuffle=True, num_workers=1, pin_memory=True)
+
+root = "./tiny-imagenet-200"
+train_set = ImgNetDataset(rootdir=root, mode="train", transforms=transforms)
+valid_set = ImgNetDataset(rootdir=root, mode="val", transforms=transforms)
+
+train_loader = DataLoader(train_set, batch_size = batch_size, shuffle = True, num_workers=1, pin_memory=True)
+valid_loader = DataLoader(valid_set, batch_size = batch_size, shuffle = True, num_workers=1, pin_memory=True)
 
 criterion = nn.CrossEntropyLoss()
 

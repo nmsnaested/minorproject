@@ -155,7 +155,7 @@ def plot_train_val(logfile, models_dict, nb_epochs, figtype="pdf", dataset="cifa
     val_accs = []
 
     for m in range(len(models_dict)):
-        log = open("trained_model_{}_{}.pickle".format(m, logfile) , "rb")
+        log = open("trained_model_{}_{}_{}.pickle".format(m, nb_epochs, logfile) , "rb")
         tmplist = []
         while 1:
             try:

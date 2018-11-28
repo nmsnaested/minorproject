@@ -29,10 +29,10 @@ class DatasetFromDir(Dataset):
     def __len__(self):    
         return len(self.list)
 
-class ImgNetDataset(Dataset):
+class GetTinyImgNet(Dataset):
     def __init__(self, rootdir, mode, transforms=None):
         '''
-        :basedir: base directory in which are all the dataset folders
+        :rootdir: base directory in which are all the dataset folders
         :mode: train, val (validation) or test
         :transforms: list of transformations to apply to the images
         '''
@@ -40,7 +40,7 @@ class ImgNetDataset(Dataset):
         self.dir = os.path.join(rootdir, mode)
         self.imgdir = os.path.join(self.dir, "images")
         self.mode = mode
-        if mode != "train" and mode != "val" and mode != "test":
+        if self.mode != "train" and mode != "val" and mode != "test":
             raise ValueError("mode is {}, should be 'train', 'val' or 'test'".format(self.mode))
 
         self.images = [filename for filename in os.listdir(self.imgdir) if os.path.isfile(os.path.join(self.imgdir, filename)) and filename!='.DS_Store']
@@ -70,7 +70,7 @@ class ImgNetDataset(Dataset):
             with open(filename, "rt") as f:
                 line = f.readlines()[idx]
                 name = line.split("\t")[1]
-                label = next((idx for idx, n in self.names if name == n), None)
+                label = next(iter([idx for idx, n in enumerate(self.names) if name == n]), None)
 
         elif self.mode == "test":
             label = None
@@ -79,3 +79,17 @@ class ImgNetDataset(Dataset):
         
     def __len__(self):
         return len(self.images)
+"""
+class GetImgNet(Dataset):
+    def __init__(self, rootdir, mode, transforms=None):
+        '''
+        :rootdir: base directory in which the 
+        :mode: train, val (validation) or test
+        :transforms: list of transformations to apply to the images
+        '''
+
+
+    def __getitem__():
+
+    def __len__(): 
+"""
